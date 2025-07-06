@@ -13,9 +13,9 @@ For a straightforward setup, we highly recommend installing the Anaconda Distrib
 
 Download Anaconda here: https://www.anaconda.com/download
 
-🛠️ Install
+
+🛠️ Installation
 ---
-## 🛠️ Installation
 
 Please follow these two steps to set up your environment.
 
