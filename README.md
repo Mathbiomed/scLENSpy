@@ -4,6 +4,16 @@ This document provides instructions on setting up scLENS-py.
 
 ---
 
+Project Setup and Usage
+This document provides instructions on how to set up the environment and get started with the project.
+
+✅ Prerequisites
+For a straightforward setup, we highly recommend installing the Anaconda Distribution. It includes Python, the conda package manager, and other essential scientific computing libraries.
+
+Download Anaconda here: https://www.anaconda.com/download
+---
+🛠️ Install
+
 ## 🛠️ Installation
 
 Please follow these two steps to set up your environment.
