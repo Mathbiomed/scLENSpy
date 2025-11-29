@@ -4,8 +4,9 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python=3.13
+  - python=3.11
   - cudatoolkit
+  - nomkl
   - pandas
   - numpy
   - scipy
@@ -24,3 +25,4 @@ dependencies:
   - pip:
     - tqdm-joblib
     - umap-learn[plot] 
+
