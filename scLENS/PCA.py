@@ -21,24 +21,10 @@ class PCA(randomly.Rm):
             self.device = device
     
     def fit(self, X=None, eigen_solver='wishart'):
-        """
-        Fit RM model
-
-        Parameters
-        ----------
-        X: torch.tensor, shape (n_cells, n_genes)
-            where n_cells is the number of cells
-            and n_genes is the number of genes
-        ----------
-        self: object
-            Returns the instance itself
-        """
         if not self._preprocessing_flag:
             self.n_cells = X.shape[0]
             self.n_genes = X.shape[1]
 
-        """Dispatch to the right submethod depending on
-           the chosen solver"""
         if self.eigen_solver == 'wishart':
             (self.L, self.V) = self._get_eigen(X)
             Xr = self._random_matrix(X)
@@ -47,8 +33,8 @@ class PCA(randomly.Rm):
             del Xr
             torch.cuda.empty_cache()
 
-            self.explained_variance_ = (self.L**2) / (self.n_cells)
-            self.total_variance_ = self.explained_variance_.sum()
+            # self.explained_variance_ = (self.L**2) / (self.n_cells)
+            # self.total_variance_ = self.explained_variance_.sum()
 
             self.L_mp = self._mp_calculation(self.L, self.Lr)
             self.lambda_c = self._tw()
@@ -67,51 +53,95 @@ class PCA(randomly.Rm):
         self.n_components = len(self.Ls)
     
     def get_signal_components(self, n_components=0):
-        """
-        Extract signal components after fitting
-
-        Parameters
-        ----------
-        n_components: int
-            The number of signal components to be returned
-        ----------
-        Ls: numpy.ndarray
-            Eigenvalues of signal components
-        Vs: numpy.ndarray
-            Signal component vectors
-        """
         if n_components == 0:
             return self.Ls,  self.Vs
         elif n_components >= 1:
             return self.Ls[:n_components], self.Vs[:n_components]
         raise ValueError('n_components must be positive')
     
-    def _wishart_matrix(self, X):
-        """Compute Wishart Matrix of the cells"""
-        Y = (X @ torch.transpose(X, 0, 1))
-        Y.div_(X.shape[1])
+    
+        
+    # def _wishart_matrix(self, X):
+    #     """Compute Wishart Matrix of the cells"""
+    #     Y = (X @ torch.transpose(X, 0, 1))
+    #     Y.div_(X.shape[1])
 
+    #     torch.cuda.empty_cache()
+    #     return Y
+    
+    def _wishart_matrix(self, X):
+        n, p = X.shape
+        if n <= p:
+            Y = X @ X.T
+        else:
+            Y = X.T @ X
+        Y.div_(p)
         torch.cuda.empty_cache()
         return Y
-    
-    def _random_matrix(self, X):
-        Xr = torch.stack([
-            row[torch.randperm(row.shape[0])] for row in torch.unbind(X, dim=0)
-        ], dim=0)
+
+    # def _random_matrix(self, X):
+    #     Xr = torch.stack([
+    #         row[torch.randperm(row.shape[0])] for row in torch.unbind(X, dim=0)
+    #     ], dim=0)
         
+    #     torch.cuda.empty_cache()
+    #     return Xr
+    def _random_matrix(self, X):
+        noise = torch.rand_like(X)
+        perm_indices = torch.argsort(noise, dim=1)
+        Xr = torch.gather(X, dim=1, index=perm_indices)
         torch.cuda.empty_cache()
         return Xr
 
-    def _get_eigen(self, X):
-        """Compute Eigenvalues of the real symmetric matrix"""
-        Y = self._wishart_matrix(X)
-        (L, V) = torch.linalg.eigh(Y)
-        L = L.cpu().numpy()
-        V = V.cpu().numpy()
+    # def _get_eigen(self, X):
+    #     """Compute Eigenvalues of the real symmetric matrix"""
+    #     Y = self._wishart_matrix(X)
+    #     (L, V) = torch.linalg.eigh(Y)
+    #     L = L.cpu().numpy()
+    #     V = V.cpu().numpy()
 
-        del Y
-        torch.cuda.empty_cache()
-        return (L, V)
+    #     del Y
+    #     torch.cuda.empty_cache()
+    #     return (L, V)
+    def _get_eigen(self, X):
+            n, p = X.shape
+            Y = self._wishart_matrix(X) 
+    
+            try:
+                L, V = torch.linalg.eigh(Y)
+                
+                if n > p:
+                    V = X @ V
+                    V = V / torch.norm(V, dim=0, keepdim=True)
+    
+                L = L.cpu().numpy()
+                V = V.cpu().numpy()
+    
+            except torch.cuda.OutOfMemoryError:
+                print('[Warning] GPU memory insufficient. Falling back to CPU computation.')
+                
+                torch.cuda.empty_cache()
+                Y_cpu = Y.cpu()
+                del Y 
+                torch.cuda.empty_cache()
+                
+                L, V = torch.linalg.eigh(Y_cpu)
+                
+                if n > p:
+                    X_cpu = X.cpu()
+                    V = X_cpu @ V
+                    V = V / torch.norm(V, dim=0, keepdim=True)
+                    if 'X_cpu' in locals(): del X_cpu
+    
+                L = L.numpy()
+                V = V.numpy()
+                
+                if 'Y_cpu' in locals(): del Y_cpu
+    
+            if 'Y' in locals(): del Y
+            torch.cuda.empty_cache()
+            
+            return L, V
     
     def plot_mp(self, comparison=True, path=False,
                 info=True, bins=None, title=None):
