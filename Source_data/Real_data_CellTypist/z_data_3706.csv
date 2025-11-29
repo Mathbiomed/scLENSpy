@@ -1,0 +1,20 @@
+,label_key,cluster,n_cells,n_markers,logfc_mean,auc_mean,is_meaningful,markers_str,pred_markers_str,pred_nmarkers,pred_ctype
+0,cell_type,cd4-t-helper,300,0,,,False,,,0,Tcm/Naive helper T cells
+1,cell_type,memory-t,327,2,1.4320271015167236,0.7681056349714339,False,S100A4;CD52,S100A4,1,Treg(diff)
+2,cell_type,naive-cytotoxic,352,1,8.433234214782715,0.8721725655767157,False,CD8B,CD8B,1,Tcm/Naive cytotoxic T cells
+3,cell_type,naive-t,259,0,,,False,,,0,Tcm/Naive helper T cells
+4,cell_type,regulatory-t,379,2,1.1331342458724976,0.7122619895055862,False,DUSP1;HLA-A,HLA-A,1,Tcm/Naive cytotoxic T cells
+5,MultiK,2,746,7,1.3436307907104492,0.7550819728616884,False,S100A4;IL32;B2M;SH3BGRL3;HLA-A;DUSP1;FTH1,HLA-A;S100A4,2,Treg(diff)
+6,MultiK,3,545,0,,,False,,,0,Tcm/Naive helper T cells
+7,MultiK,4,322,1,6.5633931159973145,0.8823676576008775,False,CD8B,CD8B,1,Tcm/Naive cytotoxic T cells
+8,ChooseR,1,315,1,6.414849281311035,0.8856604373952098,False,CD8B,CD8B,1,Tcm/Naive cytotoxic T cells
+9,ChooseR,4,766,5,1.3469465970993042,0.7646001148084365,False,S100A4;IL32;B2M;SH3BGRL3;HLA-A,HLA-A;S100A4,2,Treg(diff)
+10,ChooseR,5,531,0,,,False,,,0,Tcm/Naive helper T cells
+11,MultiK + scLENS,1,357,1,8.171324729919434,0.8653598491189305,False,CD8B,CD8B,1,Tcm/Naive cytotoxic T cells
+12,MultiK + scLENS,3,445,12,0.9696523547172546,0.7302607762148213,True,HLA-A;B2M;IL32;SH3BGRL3;S100A4;GAPDH;DUSP1;FTH1;HLA-B;UBC;PFN1;HLA-C,HLA-A;B2M;HLA-C;HLA-B,4,Tcm/Naive cytotoxic T cells
+13,MultiK + scLENS,4,521,0,,,False,,,0,Tcm/Naive helper T cells
+14,MultiK + scLENS,6,289,1,1.9430136680603027,0.8132455596617731,False,S100A4,S100A4,1,Treg(diff)
+15,ChooseR + scLENS,2,357,1,8.171324729919434,0.8653598491189305,False,CD8B,CD8B,1,Tcm/Naive cytotoxic T cells
+16,ChooseR + scLENS,4,417,10,1.023085355758667,0.7362839770024985,True,HLA-A;IL32;B2M;SH3BGRL3;S100A4;DUSP1;GAPDH;HLA-B;PFN1;FTH1,HLA-A;S100A4;HLA-B,3,Treg(diff)
+17,ChooseR + scLENS,5,550,0,,,False,,,0,Tcm/Naive helper T cells
+18,ChooseR + scLENS,7,288,1,1.938976764678955,0.8125944108761329,False,S100A4,S100A4,1,Treg(diff)

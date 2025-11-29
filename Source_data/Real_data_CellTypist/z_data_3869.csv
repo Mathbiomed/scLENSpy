@@ -1,0 +1,21 @@
+,label_key,cluster,n_cells,n_markers,logfc_mean,auc_mean,is_meaningful,markers_str,pred_markers_str,pred_nmarkers,pred_ctype
+0,cell_type,cd4-t-helper,492,0,,,False,,,0,Tcm/Naive helper T cells
+1,cell_type,memory-t,493,1,1.945310354232788,0.7996337171849461,False,S100A4,S100A4,1,Treg(diff)
+2,cell_type,naive-cytotoxic,452,1,7.78134298324585,0.8703353372927448,False,CD8B,CD8B,1,Tcm/Naive cytotoxic T cells
+3,cell_type,naive-t,498,0,,,False,,,0,Tcm/Naive helper T cells
+4,cell_type,regulatory-t,463,1,1.5862177610397339,0.7071642640681769,False,DUSP1,,0,Tcm/Naive helper T cells
+5,MultiK,0,1002,6,1.557242512702942,0.7765157648330999,False,S100A4;IL32;SH3BGRL3;B2M;DUSP1;HLA-A,HLA-A;S100A4,2,Treg(diff)
+6,MultiK,1,970,0,,,False,,,0,Tcm/Naive helper T cells
+7,MultiK,5,423,2,8.730509757995605,0.7986105117028469,False,CD8B;RP11-291B21.2,CD8B,1,Tcm/Naive cytotoxic T cells
+8,ChooseR,3,636,1,1.6857738494873047,0.758459606900187,False,S100A4,S100A4,1,Treg(diff)
+9,ChooseR,4,432,8,0.9519729614257812,0.7457351826871836,True,HLA-A;B2M;S100A4;IL32;SH3BGRL3;PFN1;TMSB4X;ACTB,HLA-A;B2M;ACTB,3,Tcm/Naive cytotoxic T cells
+10,ChooseR,5,877,0,,,False,,,0,Tcm/Naive helper T cells
+11,ChooseR,7,433,2,8.5496826171875,0.7897121772532163,False,CD8B;RP11-291B21.2,CD8B,1,Tcm/Naive cytotoxic T cells
+12,MultiK + scLENS,1,847,0,,,False,,,0,Tcm/Naive helper T cells
+13,MultiK + scLENS,4,642,9,1.036568284034729,0.739899259464848,True,B2M;IL32;HLA-A;S100A4;SH3BGRL3;HLA-B;DUSP1;HLA-C;PFN1,HLA-A;B2M;HLA-C;HLA-B,4,Tcm/Naive cytotoxic T cells
+14,MultiK + scLENS,5,468,1,7.690606594085693,0.8564851814851815,False,CD8B,CD8B,1,Tcm/Naive cytotoxic T cells
+15,MultiK + scLENS,6,436,1,1.8798847198486328,0.7947857139508611,False,S100A4,S100A4,1,Treg(diff)
+16,ChooseR + scLENS,2,598,8,1.0521960258483887,0.7384677686065902,True,B2M;IL32;S100A4;HLA-A;DUSP1;SH3BGRL3;HLA-B;HLA-C,HLA-A;B2M;HLA-C;HLA-B,4,Tcm/Naive cytotoxic T cells
+17,ChooseR + scLENS,3,854,0,,,False,,,0,Tcm/Naive helper T cells
+18,ChooseR + scLENS,4,473,1,1.9378246068954468,0.8003061134601832,False,S100A4,S100A4,1,Treg(diff)
+19,ChooseR + scLENS,6,468,1,7.690606594085693,0.8564851814851815,False,CD8B,CD8B,1,Tcm/Naive cytotoxic T cells
