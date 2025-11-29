@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import scipy
 from .PCA import PCA
+from .cluster_utils import find_clusters
 import anndata
 
 from tqdm.auto import tqdm
@@ -50,7 +51,12 @@ class scLENS():
         self._perturbed_n_scale = perturbed_n_scale
         self.device = device    
         if device is None:
-            self.device = torch.device("cpu")
+            if torch.cuda.is_available():
+                self.device = torch.device("cuda")
+            else:
+                self.device = torch.device("cpu")
+                    
+            
     
     def preprocess(self, 
                    data, 
@@ -255,13 +261,10 @@ class scLENS():
         # pert_scores = np.array(pert_scores)
         # pvals = np.sum(pert_scores < self.threshold, axis=0) / pert_scores.shape[0]
         
-        # --- 2. 모든 쌍의 상관관계 계산 (Julia: b_ 생성) ---
         all_pairwise_corrs = []
         
-        # reordered_pert_vecs 리스트에서 가능한 모든 쌍의 조합을 구함
         for vec_i, vec_j in combinations(reordered_pert_vecs, 2):
             dots = torch.abs(vec_i.T @ vec_j)
-            # 각 특성(행)에 대한 최대 상관관계를 계산
             corr = torch.max(dots, dim=1).values
             all_pairwise_corrs.append(corr.cpu().numpy())
         
@@ -272,11 +275,9 @@ class scLENS():
             
         pairwise_scores = np.array(all_pairwise_corrs).T
         
-        # --- 3. 이상치 제거 및 중앙값 계산 (Julia: filt_b_, m_score) ---
         n_features = pairwise_scores.shape[0]
         median_scores = np.zeros(n_features)
         
-        # 각 특성(행)에 대해 이상치를 제거하고 중앙값을 계산
         q1 = np.quantile(pairwise_scores, 0.25, axis=1)
         q3 = np.quantile(pairwise_scores, 0.75, axis=1)
         iqr = q3 - q1
@@ -286,16 +287,11 @@ class scLENS():
         
         for i in range(n_features):
             row_scores = pairwise_scores[i, :]
-            # 현재 행(특성)에 대한 이상치 필터링 마스크 생성
             mask = (row_scores >= lower_bound[i]) & (row_scores <= upper_bound[i])
             
-            # 이상치가 제거된 데이터의 중앙값을 계산
             filtered_scores = row_scores[mask]
             if len(filtered_scores) > 0:
                 median_scores[i] = np.median(filtered_scores)
-            # 만약 모든 데이터가 이상치로 제거되면 중앙값은 0으로 유지됩니다.
-        
-        # 최종 안정성 점수는 중앙값 점수
 
         self._robust_idx = median_scores > 0.5
 
@@ -306,6 +302,7 @@ class scLENS():
         torch.cuda.empty_cache()
 
         return self.X_transform
+
 
     def _calculate_sparsity(self):
         """Automatic sparsity level calculation"""
@@ -325,7 +322,7 @@ class scLENS():
         bin = scipy.sparse.csr_array(self._raw)
         bin.data[:] = 1.
         bin = torch.tensor(bin.toarray()).to(self.device,dtype=torch.double)
-        Vb = self._PCA_rand(self._preprocess_rand(bin, inplace=False), bin.shape[0]).cpu()
+        Vb = self._PCA_rand(self._preprocess_rand(bin, inplace=False), bin.shape[0])
         n_vbp = Vb.shape[1]//2
 
         n_buffer = 5
@@ -337,20 +334,21 @@ class scLENS():
 
             # Construct perturbed data matrix
             pert = torch.zeros_like(bin, device=self.device)
-            pert[idx] = 1
+            # pert[idx] = 1
+            pert[tuple(idx)] = 1
             pert += bin
 
             # pert = self._preprocess_rand(pert)
             # pert = pert @ torch.transpose(pert, 0, 1)
             # pert.div_(pert.shape[1])
             # Vbp = torch.linalg.eigh(pert)[1][:, :n_vbp].cpu()
-            Vbp = self._PCA_rand(self._preprocess_rand(pert), pert.shape[0])[:, :n_vbp].cpu()
+            Vbp = self._PCA_rand(self._preprocess_rand(pert), pert.shape[0])[:, :n_vbp]
 
             del pert
             torch.cuda.empty_cache()
 
             # Calculate correlation between perturbed and original data
-            corr_arr = torch.max(torch.abs(torch.transpose(Vb, 0, 1) @ Vbp), dim=0).values.numpy()
+            corr_arr = torch.max(torch.abs(torch.transpose(Vb, 0, 1) @ Vbp), dim=0).values.cpu().numpy()
             corr = np.sort(corr_arr)[1]
 
             buffer.pop(0)
@@ -369,6 +367,8 @@ class scLENS():
         
         del bin, Vb
         torch.cuda.empty_cache()
+    
+    
 
     def _PCA(self, X, plot_mp=False):
         pca = PCA(device=self.device)
@@ -384,15 +384,32 @@ class scLENS():
 
         return comp
     
-    def _PCA_rand(self, X, n):
-        W = (X @ torch.transpose(X, 0, 1))
-        W.div_(X.shape[1])
-        _, V = torch.linalg.eigh(W)
-        V = V[:, -n:]
+    # def _PCA_rand(self, X, n):
+    #     W = (X @ torch.transpose(X, 0, 1))
+    #     W.div_(X.shape[1])
+    #     _, V = torch.linalg.eigh(W)
+    #     V = V[:, -n:]
 
-        del W, _
-        torch.cuda.empty_cache()
-        return V
+    #     del W, _
+    #     torch.cuda.empty_cache()
+    #     return V
+    
+    def _PCA_rand(self, X, n):
+            pca = PCA(device=self.device)
+    
+            L, V = pca._get_eigen(X)
+            # L = L[-n:]
+            V = V[:, -n:]
+            V = torch.from_numpy(V).to(self.device)
+        
+            if X.dtype == torch.float64:
+                V = V.double()
+            else:
+                V = V.float()
+            del pca, L
+            torch.cuda.empty_cache()
+    
+            return V
     
     def plot_preprocessing(self):
         fig, axs = plt.subplots(1, 2, figsize=(10, 5))
@@ -426,7 +443,6 @@ class scLENS():
                 n_iterations=-1,
                 **kwargs):
         """"""
-        from .cluster_utils import find_clusters
 
         if res is not None:
             self.resolution = res
@@ -461,13 +477,21 @@ class scLENS():
         adata = anndata.AnnData(
                 X=self.X,
                 obs=pd.DataFrame(index=self.obs_names),
-                var=pd.DataFrame(index=self.var_names)
+                var=pd.DataFrame(index=self.var_names),
             )
+        adata.layers["counts"] = self._raw
         adata.raw = anndata.AnnData(X=self._raw, var=pd.DataFrame(index=self.var_names))
         adata.obsm['X_pca_sclens'] = self.X_transform
-        adata.obs['optim_label'] = self.optim_label
         
-        print("AnnData 객체 생성 완료!")
+        if hasattr(self,'chooseR_resolution'):
+            cluster = find_clusters(self.X_transform, res=max(self.chooseR_resolution.res))
+            adata.obs['chooseR_label'] = cluster
+        
+        if hasattr(self,'multiK_resolution'):
+            for s in self.multiK_resolution:
+                cluster = find_clusters(self.X_transform, res=s)
+                adata.obs[f'multiK_label_{s}'] = cluster
+        
         return adata
         
         
