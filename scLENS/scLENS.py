@@ -457,7 +457,7 @@ class scLENS():
 #                device = 'cpu'
 #            else:
 #                device = 'gpu'
-            self.multiK_resolution = multiK(self._raw, device=device, **kwargs)
+            self.multiK_resolution = multiK(self._raw, **kwargs)
             resolution = max(self.multiK_resolution)
 
         else:
@@ -495,4 +495,5 @@ class scLENS():
         return adata
         
         
+
 
