@@ -453,10 +453,10 @@ class scLENS():
             
         elif method == 'multiK':
             from .clustering import multiK
-            if self.device == torch.device('cpu'):
-                device = 'cpu'
-            else:
-                device = 'gpu'
+#            if self.device == torch.device('cpu'):
+#                device = 'cpu'
+#            else:
+#                device = 'gpu'
             self.multiK_resolution = multiK(self._raw, device=device, **kwargs)
             resolution = max(self.multiK_resolution)
 
@@ -495,3 +495,4 @@ class scLENS():
         return adata
         
         
+
